@@ -415,14 +415,7 @@
                 <div class="card-panel">
                     <div class="panel-title-row">
                         <h3 class="panel-title" data-i18n="dataManagement">データ管理</h3>
-                        <button class="btn-info" id="btn-csv-info" type="button" title="CSVインポート形式の説明">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="16" x2="12" y2="12" />
-                                <line x1="12" y1="8" x2="12.01" y2="8" />
-                            </svg>
-                        </button>
+                        <button class="btn-info" id="btn-csv-info" type="button" title="CSVインポート形式の説明">i</button>
                     </div>
                     <div class="settings-btn-row">
                         <button class="btn-secondary settings-btn" id="btn-export-unified">
@@ -455,7 +448,7 @@
                     </button>
                 </div>
                 <div class="card-panel">
-                    <p class="settings-about">ENGRAM v1.0</p>
+                    <p class="settings-about">ENGRAM v1.1</p>
                     <p class="settings-about-sub" data-i18n="appSubtitle">暗記学習アプリ</p>
                 </div>
             </div>
@@ -471,10 +464,11 @@
                 <span data-i18n="navHome">ホーム</span>
             </button>
             <button class="nav-item" data-screen="screen-quiz-setup">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                    <circle cx="12" cy="17" r="0.5" fill="currentColor" />
                 </svg>
                 <span data-i18n="navQuiz">クイズ</span>
             </button>
@@ -536,15 +530,20 @@
             </div>
         </div>
 
-        <!-- ==================== CSV INFO MODAL ==================== -->
+        <!-- ==================== DATA INFO MODAL ==================== -->
         <div class="info-modal-overlay" id="csv-info-modal" style="display:none;">
             <div class="info-modal-dialog">
                 <div class="info-modal-header">
-                    <h3>CSVインポート形式</h3>
+                    <h3>インポート / エクスポート</h3>
                     <button class="info-modal-close" id="csv-info-close">&times;</button>
                 </div>
                 <div class="info-modal-body">
-                    <p class="info-note">1行目はヘッダーとしてスキップされます（列名は自由）</p>
+                    <p class="info-subtitle">📦 JSON形式</p>
+                    <p class="info-note">カード＋学習データの完全バックアップ。<br>インポート時は既存データを<strong>上書き</strong>します。</p>
+
+                    <p class="info-subtitle" style="margin-top:16px;">📄 CSV形式</p>
+                    <p class="info-note">
+                        カードのみ。Excel等で編集可能。<br>インポート時は既存カードに<strong>追加</strong>されます。<br>1行目はヘッダーとしてスキップ（列名は自由）。</p>
                     <div class="info-table-scroll">
                         <table class="info-table">
                             <thead>
@@ -577,15 +576,15 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="info-subtitle">CSVの例:</p>
+                    <p class="info-subtitle">一問一答の例:</p>
                     <pre class="info-csv-example">問題,解答,解説,タグ,サブタグ
 apple,りんご,,英語,果物
 骨端症とは？,骨端の障害,成長期に多い,整形,骨;評価</pre>
-                    <p class="info-subtitle" style="margin-top:12px;">穴埋め形式の例:</p>
+                    <p class="info-subtitle" style="margin-top:12px;">穴埋めの例:</p>
                     <pre class="info-csv-example">問題,解答,解説,タグ,サブタグ
 Photosynthesis converts carbon dioxide into glucose.,carbon dioxide;glucose,,Biology,</pre>
-                    <p class="info-note">※ 穴埋め形式: 解答欄の単語が全て問題文中にあれば自動判別<br>※ カンマを含む文字は "ダブルクォート" で囲んでください<br>※
-                        インポート時は既存カードに追加されます</p>
+                    <p class="info-note">※ 穴埋め自動判別: 解答欄の単語（<code>;</code>区切り）が全て問題文中にあれば穴埋めカードになります<br>※ カンマを含む文字は
+                        "ダブルクォート" で囲んでください</p>
                 </div>
             </div>
         </div>

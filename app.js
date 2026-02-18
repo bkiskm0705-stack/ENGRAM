@@ -213,7 +213,7 @@
         localStorage.setItem(STORAGE_KEY_LANG, lang);
         document.documentElement.lang = lang;
         applyI18n();
-        document.querySelectorAll('.lang-btn').forEach(btn => {
+        document.querySelectorAll('.lang-btn:not(.theme-btn)').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === lang);
         });
         renderHome();
@@ -1822,7 +1822,7 @@
         });
 
         // Language toggle
-        document.querySelectorAll('.lang-btn').forEach(btn => {
+        document.querySelectorAll('.lang-btn:not(.theme-btn)').forEach(btn => {
             btn.addEventListener('click', () => {
                 setLanguage(btn.dataset.lang);
                 showToast(t('toastLangChanged'));
@@ -1874,7 +1874,7 @@
     function init() {
         // Apply saved language
         document.documentElement.lang = currentLang;
-        document.querySelectorAll('.lang-btn').forEach(btn => {
+        document.querySelectorAll('.lang-btn:not(.theme-btn)').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.lang === currentLang);
         });
         applyI18n();

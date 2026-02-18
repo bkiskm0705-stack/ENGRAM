@@ -1564,12 +1564,16 @@ select {
     display: flex;
     gap: var(--space-sm);
     align-items: stretch;
+    overflow: hidden;
 }
 
 .settings-btn-row .settings-btn {
     flex: 1;
+    min-width: 0;
     white-space: nowrap;
     margin-bottom: 0;
+    padding: 12px 12px;
+    font-size: var(--font-size-sm);
 }
 
 /* ========== INFO BUTTON & MODAL ========== */
@@ -1587,19 +1591,24 @@ select {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: var(--radius-full);
-    color: var(--color-text-muted);
+    color: var(--color-text-secondary);
+    border: 1.5px solid var(--color-border);
     transition: all var(--transition-fast);
-    opacity: 0.5;
     flex-shrink: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .btn-info:hover,
 .btn-info:active {
-    opacity: 1;
     color: var(--color-primary);
+    border-color: var(--color-primary-light);
     background: var(--color-primary-ghost);
 }
 
