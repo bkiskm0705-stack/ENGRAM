@@ -1226,19 +1226,25 @@ select {
 /* ========== BOTTOM NAVIGATION ========== */
 .bottom-nav {
     position: fixed;
-    bottom: 0;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
-    width: 100%;
-    height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--color-surface);
-    border-top: 1px solid var(--color-border-light);
+    width: calc(100% - 40px);
+    max-width: 400px;
+    height: var(--nav-height);
+    background: rgba(255, 255, 255, 0.35);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 100px;
     display: flex;
     align-items: center;
     justify-content: space-around;
     z-index: 100;
-    box-shadow: 0 -2px 12px rgba(26, 42, 58, 0.04);
+    box-shadow:
+        0 4px 24px rgba(26, 42, 58, 0.10),
+        0 1px 6px rgba(26, 42, 58, 0.06);
+    padding: 0 8px;
 }
 
 .nav-item {
@@ -1246,23 +1252,32 @@ select {
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 8px 0;
+    padding: 8px 12px;
     color: var(--color-text-muted);
-    transition: color var(--transition-fast);
-    min-width: 60px;
+    transition: all var(--transition-fast);
+    min-width: 56px;
+    border-radius: 16px;
+    position: relative;
 }
 
 .nav-item span {
     font-size: 10px;
     font-weight: 500;
+    transition: color var(--transition-fast);
 }
 
 .nav-item.active {
     color: var(--color-primary);
+    background: var(--color-primary-ghost);
+}
+
+.nav-item.active svg {
+    filter: drop-shadow(0 1px 3px rgba(74, 111, 165, 0.3));
 }
 
 .nav-item:active {
     color: var(--color-primary-dark);
+    transform: scale(0.93);
 }
 
 /* ========== EMPTY STATE ========== */
@@ -1296,7 +1311,7 @@ select {
 /* ========== TOAST ========== */
 .toast {
     position: fixed;
-    bottom: calc(var(--nav-height) + 16px);
+    bottom: calc(var(--nav-height) + 28px);
     left: 50%;
     transform: translateX(-50%) translateY(20px);
     background: var(--color-text);
@@ -1838,6 +1853,77 @@ select {
     box-shadow: 0 1px 4px rgba(74, 111, 165, 0.25);
 }
 
+/* ========== CLOZE WORD INPUTS ========== */
+.cloze-words-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.cloze-word-row {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
+.cloze-word-row input {
+    flex: 1;
+    padding: 10px var(--space-md);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.cloze-word-row input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ghost);
+    outline: none;
+}
+
+.cloze-word-remove {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    color: var(--color-text-muted);
+    font-size: 18px;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.cloze-word-remove:hover,
+.cloze-word-remove:active {
+    background: rgba(220, 80, 80, 0.1);
+    color: #dc5050;
+}
+
+.btn-add-cloze-word {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    border: 1.5px dashed var(--color-border);
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-fast);
+    background: transparent;
+}
+
+.btn-add-cloze-word:hover,
+.btn-add-cloze-word:active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-ghost);
+}
+
 /* ========== CLOZE BLANKS ========== */
 .cloze-blank {
     display: inline;
@@ -1908,7 +1994,7 @@ select {
     }
 
     .bottom-nav {
-        max-width: 430px;
-        border-radius: 0 0 16px 16px;
+        max-width: 400px;
+        border-radius: 100px;
     }
 }

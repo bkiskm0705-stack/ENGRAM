@@ -119,9 +119,10 @@
             confirmQuitQuiz: 'クイズを中断しますか？',
             // Cloze
             qaMode: '一問一答', clozeMode: '穴埋め',
-            clozeText: '文章', clozeWords: '穴埋め単語（;区切り）',
+            clozeText: '文章', clozeWords: '穴埋め単語',
             clozePlaceholderText: '文章を入力...',
-            clozePlaceholderWords: '穴にする単語を;区切りで入力...',
+            clozePlaceholderWord: '穴にする単語...',
+            addClozeWord: '+ 単語を追加',
             toastClozeWordNotFound: '穴埋め単語が文章内に見つかりません: ',
             tapToReveal: 'タップして解答',
             toastEnterClozeText: '文章を入力してください',
@@ -191,9 +192,10 @@
             confirmQuitQuiz: 'Quit the quiz?',
             // Cloze
             qaMode: 'Q&A', clozeMode: 'Fill-in',
-            clozeText: 'Text', clozeWords: 'Blank words (;separated)',
+            clozeText: 'Text', clozeWords: 'Blank words',
             clozePlaceholderText: 'Enter text...',
-            clozePlaceholderWords: 'Enter words to blank out, separated by ;',
+            clozePlaceholderWord: 'Word to blank out...',
+            addClozeWord: '+ Add word',
             toastClozeWordNotFound: 'Blank word not found in text: ',
             tapToReveal: 'Tap to reveal',
             toastEnterClozeText: 'Please enter the text',
@@ -879,6 +881,45 @@
         input.focus();
     }
 
+    // ---- Cloze word input helpers ----
+    function addClozeWordInput(value = '') {
+        const list = document.getElementById('cloze-words-list');
+        const row = document.createElement('div');
+        row.className = 'cloze-word-row';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'cloze-word-input';
+        input.placeholder = t('clozePlaceholderWord');
+        input.value = value;
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'cloze-word-remove';
+        removeBtn.textContent = '×';
+        removeBtn.addEventListener('click', () => {
+            row.remove();
+            // Keep at least 1 input
+            if (document.querySelectorAll('.cloze-word-row').length === 0) {
+                addClozeWordInput();
+            }
+        });
+        row.appendChild(input);
+        row.appendChild(removeBtn);
+        list.appendChild(row);
+        if (!value) input.focus();
+    }
+
+    function renderClozeWordInputs(words) {
+        const list = document.getElementById('cloze-words-list');
+        list.innerHTML = '';
+        if (words.length === 0) words = [''];
+        words.forEach(w => addClozeWordInput(w));
+    }
+
+    function getClozeWordValues() {
+        const inputs = document.querySelectorAll('.cloze-word-input');
+        return Array.from(inputs).map(inp => inp.value.trim()).filter(Boolean);
+    }
+
     function setCardTypeToggle(type) {
         editingCardType = type;
         const qaBtn = document.getElementById('btn-type-qa');
@@ -887,28 +928,30 @@
         clozeBtn.classList.toggle('active', type === 'cloze');
 
         const labelFront = document.getElementById('label-front');
-        const labelBack = document.getElementById('label-back');
         const inputFront = document.getElementById('input-front');
-        const inputBack = document.getElementById('input-back');
+        const formGroupBack = document.getElementById('form-group-back');
+        const formGroupCloze = document.getElementById('form-group-cloze-words');
+        const addBtn = document.getElementById('btn-add-cloze-word');
 
         if (type === 'cloze') {
             labelFront.textContent = t('clozeText');
             labelFront.dataset.i18n = 'clozeText';
-            labelBack.textContent = t('clozeWords');
-            labelBack.dataset.i18n = 'clozeWords';
             inputFront.placeholder = t('clozePlaceholderText');
             inputFront.dataset.i18nPlaceholder = 'clozePlaceholderText';
-            inputBack.placeholder = t('clozePlaceholderWords');
-            inputBack.dataset.i18nPlaceholder = 'clozePlaceholderWords';
+            formGroupBack.style.display = 'none';
+            formGroupCloze.style.display = 'block';
+            addBtn.textContent = t('addClozeWord');
+            // Initialize with 1 empty input if none exist
+            if (document.querySelectorAll('.cloze-word-row').length === 0) {
+                renderClozeWordInputs(['']);
+            }
         } else {
             labelFront.textContent = t('questionFront');
             labelFront.dataset.i18n = 'questionFront';
-            labelBack.textContent = t('answerBack');
-            labelBack.dataset.i18n = 'answerBack';
             inputFront.placeholder = t('enterQuestion');
             inputFront.dataset.i18nPlaceholder = 'enterQuestion';
-            inputBack.placeholder = t('enterAnswer');
-            inputBack.dataset.i18nPlaceholder = 'enterAnswer';
+            formGroupBack.style.display = 'block';
+            formGroupCloze.style.display = 'none';
         }
     }
 
@@ -931,6 +974,10 @@
                 titleEl.dataset.i18n = 'editCard';
                 frontInput.value = card.front;
                 backInput.value = card.back;
+                // Pre-populate cloze word inputs
+                if (isCloze(card)) {
+                    renderClozeWordInputs(getClozeWords(card));
+                }
                 noteInput.value = card.note || '';
                 mainTagInput.value = card.mainTag || '';
                 editingSubTags = [...getCardSubTags(card)];
@@ -943,6 +990,7 @@
             titleEl.dataset.i18n = 'createCard';
             frontInput.value = '';
             backInput.value = '';
+            renderClozeWordInputs(['']);
             noteInput.value = '';
             mainTagInput.value = currentMainTag || '';
             editingSubTags = [];
@@ -964,7 +1012,6 @@
 
     function saveCard() {
         const front = document.getElementById('input-front').value.trim();
-        const back = document.getElementById('input-back').value.trim();
         const note = document.getElementById('input-note').value.trim();
         const mainTag = document.getElementById('input-main-tag').value.trim();
         // Also add any text left in the input
@@ -974,19 +1021,22 @@
         }
         const subTags = [...editingSubTags];
         const type = editingCardType;
+        let back;
 
         if (type === 'cloze') {
             if (!front) { showToast(t('toastEnterClozeText')); return; }
-            if (!back) { showToast(t('toastEnterClozeWords')); return; }
+            const clozeWords = getClozeWordValues();
+            if (clozeWords.length === 0) { showToast(t('toastEnterClozeWords')); return; }
             // Validate all blank words exist in the text
-            const words = back.split(';').map(w => w.trim()).filter(Boolean);
-            for (const word of words) {
+            for (const word of clozeWords) {
                 if (!front.includes(word)) {
                     showToast(t('toastClozeWordNotFound') + word);
                     return;
                 }
             }
+            back = clozeWords.join(';');
         } else {
+            back = document.getElementById('input-back').value.trim();
             if (!front) { showToast(t('toastEnterQuestion')); return; }
             if (!back) { showToast(t('toastEnterAnswer')); return; }
         }
@@ -1706,6 +1756,7 @@
         // Card type toggle
         document.getElementById('btn-type-qa').addEventListener('click', () => setCardTypeToggle('qa'));
         document.getElementById('btn-type-cloze').addEventListener('click', () => setCardTypeToggle('cloze'));
+        document.getElementById('btn-add-cloze-word').addEventListener('click', () => addClozeWordInput());
 
         // Tags
         document.getElementById('btn-back-tags').addEventListener('click', goBack);

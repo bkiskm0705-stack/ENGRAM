@@ -97,10 +97,17 @@
                     <textarea class="form-input form-textarea" id="input-front" data-i18n-placeholder="enterQuestion"
                         placeholder="問題を入力..." rows="3"></textarea>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="form-group-back">
                     <label class="form-label" id="label-back" data-i18n="answerBack">解答（裏面）</label>
                     <textarea class="form-input form-textarea" id="input-back" data-i18n-placeholder="enterAnswer"
                         placeholder="解答を入力..." rows="3"></textarea>
+                </div>
+                <div class="form-group" id="form-group-cloze-words" style="display:none;">
+                    <label class="form-label" id="label-cloze-words" data-i18n="clozeWords">穴埋め単語</label>
+                    <div class="cloze-words-list" id="cloze-words-list">
+                        <!-- Dynamic word inputs rendered by JS -->
+                    </div>
+                    <button class="btn-add-cloze-word" id="btn-add-cloze-word" type="button">+ 単語を追加</button>
                 </div>
                 <div class="form-group">
                     <label class="form-label">解説（任意）</label>
@@ -448,7 +455,7 @@
                     </button>
                 </div>
                 <div class="card-panel">
-                    <p class="settings-about">ENGRAM v1.1</p>
+                    <p class="settings-about">ENGRAM v1.2</p>
                     <p class="settings-about-sub" data-i18n="appSubtitle">暗記学習アプリ</p>
                 </div>
             </div>
