@@ -72,7 +72,8 @@
             noTags: 'タグがありません', noSubTags: 'サブタグがありません',
             quizSetup: 'クイズ設定', all: 'すべて', numberOfQuestions: '問題数',
             questionOrder: '出題順', random: 'ランダム', sequential: '順番通り',
-            hardFirst: '苦手優先', targetCards: '対象カード', cardsUnit: '枚',
+            hardFirst: '苦手優先', reviewFirst: '復習優先', reviewDue: '復習対象',
+            targetCards: '対象カード', cardsUnit: '枚',
             startQuiz: 'クイズ開始', showAnswer: 'Show Answer',
             quizResult: 'クイズ結果', correctRate: '正答率', totalQuestions: '総問題数',
             tryAgain: 'もう一度', backToHome: 'ホームへ戻る',
@@ -147,7 +148,8 @@
             noTags: 'No tags', noSubTags: 'No sub tags',
             quizSetup: 'Quiz Setup', all: 'All', numberOfQuestions: 'Number of Questions',
             questionOrder: 'Question Order', random: 'Random', sequential: 'Sequential',
-            hardFirst: 'Hardest First', targetCards: 'Target cards', cardsUnit: '',
+            hardFirst: 'Hardest First', reviewFirst: 'Review First', reviewDue: 'Due for review',
+            targetCards: 'Target cards', cardsUnit: '',
             startQuiz: 'Start Quiz', showAnswer: 'Show Answer',
             quizResult: 'Quiz Result', correctRate: 'Correct Rate', totalQuestions: 'Total',
             tryAgain: 'Try Again', backToHome: 'Back to Home',
@@ -744,14 +746,22 @@
             const studied = tagCards.filter(c => c.stats && c.stats.lastStudied).length;
             const total = tagCards.length;
             const progress = total > 0 ? (studied / total) * 100 : 0;
+            // Count cards due for review
+            const dueCount = tagCards.filter(c => {
+                if (!c.stats || !c.stats.lastStudied) return true;
+                const interval = c.stats.interval || 1;
+                return Date.now() >= c.stats.lastStudied + interval * 24 * 60 * 60 * 1000;
+            }).length;
 
             const div = document.createElement('div');
             div.className = 'deck-card';
             div.style.animationDelay = `${i * 0.05}s`;
+            const dueBadge = dueCount > 0 ? `<span class="deck-card-due-badge">${t('reviewDue')}: ${dueCount}</span>` : '';
             div.innerHTML = `
                 <div class="deck-card-title">${escapeHtml(tag)}</div>
                 <div class="deck-card-meta">
                     <span class="deck-card-studies">${t('studies')}: ${studied}/${total}</span>
+                    ${dueBadge}
                     <div class="deck-card-progress">
                         <div class="deck-card-progress-fill" style="width: ${progress}%"></div>
                     </div>
@@ -1177,6 +1187,14 @@
     let quizCards = [], quizIndex = 0, quizResults = [], quizMainTag = '', quizSubTag = '';
     let clozeRevealIndex = 0;
 
+    // Helper: check if a card is due for review
+    function isCardDueForReview(card) {
+        if (!card.stats || !card.stats.lastStudied) return true; // never studied = due
+        const interval = card.stats.interval || 1;
+        const nextReview = card.stats.lastStudied + interval * 24 * 60 * 60 * 1000;
+        return Date.now() >= nextReview;
+    }
+
     function startQuiz() {
         const mainTag = document.getElementById('quiz-main-tag').value;
         const subTag = document.getElementById('quiz-sub-tag').value;
@@ -1195,6 +1213,13 @@
                     return bH - aH;
                 });
                 break;
+            case 'review-first': {
+                // Due cards first, then shuffle within each group
+                const due = shuffle(cards.filter(c => isCardDueForReview(c)));
+                const notDue = shuffle(cards.filter(c => !isCardDueForReview(c)));
+                cards = [...due, ...notDue];
+                break;
+            }
         }
 
         quizCards = cards.slice(0, Math.min(count, cards.length));
@@ -1341,9 +1366,17 @@
         const allCards = Store.getCards();
         const cardInStore = allCards.find(c => c.id === card.id);
         if (cardInStore) {
-            if (!cardInStore.stats) cardInStore.stats = { easy: 0, good: 0, hard: 0, lastStudied: null };
+            if (!cardInStore.stats) cardInStore.stats = { easy: 0, good: 0, hard: 0, lastStudied: null, interval: 1 };
             cardInStore.stats[difficulty]++;
             cardInStore.stats.lastStudied = Date.now();
+            // Spaced repetition: set next review interval (days)
+            if (difficulty === 'hard') {
+                cardInStore.stats.interval = 1;
+            } else if (difficulty === 'good') {
+                cardInStore.stats.interval = 3;
+            } else if (difficulty === 'easy') {
+                cardInStore.stats.interval = 7;
+            }
             // Write update
             if (isCloudMode) {
                 db.collection('users').doc(currentUserId).collection('cards').doc(card.id)
@@ -1559,17 +1592,21 @@
 
     function exportCSV() {
         const cards = Store.getCards();
-        const header = ['問題(front)', '解答(back)', '解説(note)', 'メインタグ(mainTag)', 'サブタグ(subTags)'];
+        const header = ['問題(front)', '解答(back)', '解説(note)', 'メインタグ(mainTag)', 'サブタグ(subTags)', '復習間隔(interval)', '最終学習日(lastStudied)'];
         const lines = [header.map(escapeCSVField).join(',')];
 
         cards.forEach(card => {
             const subTags = getCardSubTags(card).join(';');
+            const interval = (card.stats && card.stats.interval) ? card.stats.interval : '';
+            const lastStudied = (card.stats && card.stats.lastStudied) ? formatDate(card.stats.lastStudied) : '';
             lines.push([
                 escapeCSVField(card.front),
                 escapeCSVField(card.back),
                 escapeCSVField(card.note || ''),
                 escapeCSVField(card.mainTag || ''),
-                escapeCSVField(subTags)
+                escapeCSVField(subTags),
+                escapeCSVField(String(interval)),
+                escapeCSVField(lastStudied)
             ].join(','));
         });
 
@@ -1617,6 +1654,15 @@
                     const subTagsStr = (row[4] || '').trim();
                     const subTags = subTagsStr ? subTagsStr.split(';').map(s => s.trim()).filter(Boolean) : [];
 
+                    // Read optional interval (col 6) and lastStudied (col 7)
+                    const csvInterval = parseInt(row[5]) || 1;
+                    const csvLastStudied = (row[6] || '').trim();
+                    let parsedLastStudied = null;
+                    if (csvLastStudied) {
+                        const d = new Date(csvLastStudied.replace(/\//g, '-'));
+                        if (!isNaN(d.getTime())) parsedLastStudied = d.getTime();
+                    }
+
                     const card = {
                         id: uuid(),
                         front, back, note,
@@ -1624,7 +1670,7 @@
                         subTags,
                         type: detectClozeFromCSV(front, back) ? 'cloze' : 'qa',
                         createdAt: Date.now(),
-                        stats: { easy: 0, good: 0, hard: 0, lastStudied: null }
+                        stats: { easy: 0, good: 0, hard: 0, lastStudied: parsedLastStudied, interval: csvInterval }
                     };
                     Store.addCard(card);
                     imported++;
@@ -1683,11 +1729,19 @@
                         const mainTag = (row[3] || '').trim() || t('uncategorized');
                         const subTagsStr = (row[4] || '').trim();
                         const subTags = subTagsStr ? subTagsStr.split(';').map(s => s.trim()).filter(Boolean) : [];
+                        // Read optional interval (col 6) and lastStudied (col 7)
+                        const csvInterval2 = parseInt(row[5]) || 1;
+                        const csvLastStudied2 = (row[6] || '').trim();
+                        let parsedLastStudied2 = null;
+                        if (csvLastStudied2) {
+                            const d = new Date(csvLastStudied2.replace(/\//g, '-'));
+                            if (!isNaN(d.getTime())) parsedLastStudied2 = d.getTime();
+                        }
                         const card = {
                             id: uuid(), front, back, note, mainTag, subTags,
                             type: detectClozeFromCSV(front, back) ? 'cloze' : 'qa',
                             createdAt: Date.now(),
-                            stats: { easy: 0, good: 0, hard: 0, lastStudied: null }
+                            stats: { easy: 0, good: 0, hard: 0, lastStudied: parsedLastStudied2, interval: csvInterval2 }
                         };
                         Store.addCard(card);
                         imported++;

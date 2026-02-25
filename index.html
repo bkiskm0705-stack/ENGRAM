@@ -224,6 +224,7 @@
                         <option value="random" data-i18n="random">ランダム</option>
                         <option value="sequential" data-i18n="sequential">順番通り</option>
                         <option value="hard-first" data-i18n="hardFirst">苦手優先</option>
+                        <option value="review-first" data-i18n="reviewFirst">復習優先</option>
                     </select>
                 </div>
                 <div class="quiz-card-count" id="quiz-available-count">
@@ -455,7 +456,7 @@
                     </button>
                 </div>
                 <div class="card-panel">
-                    <p class="settings-about">ENGRAM v1.21</p>
+                    <p class="settings-about">ENGRAM v1.22</p>
                     <p class="settings-about-sub" data-i18n="appSubtitle">暗記学習アプリ</p>
                 </div>
             </div>
@@ -561,6 +562,8 @@
                                     <th>3列目</th>
                                     <th>4列目</th>
                                     <th>5列目</th>
+                                    <th>6列目</th>
+                                    <th>7列目</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -571,11 +574,15 @@
                                     <td>解説</td>
                                     <td>メインタグ</td>
                                     <td>サブタグ（<code>;</code>区切り）</td>
+                                    <td>復習間隔（日数）</td>
+                                    <td>最終学習日</td>
                                 </tr>
                                 <tr>
                                     <th>必須</th>
                                     <td>✅</td>
                                     <td>✅</td>
+                                    <td></td>
+                                    <td></td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
